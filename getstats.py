@@ -19,6 +19,8 @@ def get_per_game_stats(season: int) -> object:
 
     df = panda.read_html(str(table))[0]
     df["Season"] = "{} - {}".format(season-1, season)
+    df = df.drop_duplicates(subset="Rk")
+
     return df
 
 
@@ -32,15 +34,19 @@ def get_advanced_stats(season: int) -> object:
         table_head.decompose()
 
     df = panda.read_html(str(table))[0]
-    df["Season"] = "{} - {}".format(season-1, season)
+
+    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+    df = df.drop_duplicates(subset="Rk")
+    # remove duplicate columns found in the per game status
+    df = df.drop(["Pos", "Age", "Tm", "G", "MP", "Player"], axis=1)
+
     return df
 
 
 def main():
     seasons = numpy.arange(1977, 2019, 1)
 
-    per_game_stats = panda.DataFrame()
-    advanced_stats = panda.DataFrame()
+    historical_data = panda.DataFrame()
 
     for season in seasons:
         print("Getting stats for {} - {}".format(season - 1, season))
@@ -48,12 +54,13 @@ def main():
         season_per_game_stats = get_per_game_stats(season)
         season_advanced_stats = get_advanced_stats(season)
 
-        # append them to the data frame
-        per_game_stats = per_game_stats.append(season_per_game_stats)
-        advanced_stats = advanced_stats.append(season_advanced_stats)
+        # merge the stats for the given season
+        merged_result = panda.merge(season_per_game_stats, season_advanced_stats, on="Rk")
 
-    per_game_stats.to_csv("per_game_stats_data.csv")
-    advanced_stats.to_csv("advanced_stats_data.csv")
+        # append the merged result of the season to the historical data
+        historical_data = historical_data.append(merged_result)
+
+    historical_data.to_csv("stats_data.csv")
 
     return 0
 

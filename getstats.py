@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 
 PER_GAME_BASE_URL = "https://www.basketball-reference.com/leagues/NBA_{}_per_game.html"
 ADVANCED_BASE_URL = "https://www.basketball-reference.com/leagues/NBA_{}_advanced.html"
-
+ALLSTAR_ROSTER_BASE_URL = "https://www.basketball-reference.com/allstar/NBA_{}.html"
 
 def get_per_game_stats(season: int) -> object:
     request_url = PER_GAME_BASE_URL.format(season)
@@ -43,10 +43,42 @@ def get_advanced_stats(season: int) -> object:
     return df
 
 
-def main():
-    seasons = numpy.arange(1977, 2019, 1)
+def get_allstars(season: int) -> object:
+    # the all star game was cancelled in 1999 due to NBA lockout
+    if season == 1999:
+        return
 
-    historical_data = panda.DataFrame()
+    request_url = ALLSTAR_ROSTER_BASE_URL.format(season)
+    request = requests.get(request_url)
+    html_content = BeautifulSoup(request.content, "html.parser")
+    west_all_stars = html_content.find("table", {"id": "West"})
+    east_all_stars = html_content.find("table", {"id": "East"})
+
+    # remove unwanted table items
+    for table_head in west_all_stars("tr", {"class": "thead"}):
+        table_head.decompose()
+    west_all_stars.find("tr", {"class": "over_header"}).decompose()
+    west_all_stars.find("tfoot").decompose()
+
+    for table_head in east_all_stars("tr", {"class": "thead"}):
+        table_head.decompose()
+    east_all_stars.find("tr", {"class": "over_header"}).decompose()
+    east_all_stars.find("tfoot").decompose()
+
+    df1 = panda.read_html(str(west_all_stars))[0]
+    df2 = panda.read_html(str(east_all_stars))[0]
+
+    df2["Season"] = "{} - {}".format(season-1, season)
+    df1["Season"] = "{} - {}".format(season-1, season)
+
+    return df1.append(df2, sort=True).reset_index(drop=True).rename(columns={"Starters": "Player"})
+
+
+def main():
+    seasons = numpy.arange(2005, 2007, 1)
+
+    historical_stats_data = panda.DataFrame()
+    historical_all_star_data = panda.DataFrame()
 
     for season in seasons:
         print("Getting stats for {} - {}".format(season - 1, season))
@@ -56,11 +88,25 @@ def main():
 
         # merge the stats for the given season
         merged_result = panda.merge(season_per_game_stats, season_advanced_stats, on="Rk")
+        merged_result["All-Star"] = 0
 
-        # append the merged result of the season to the historical data
-        historical_data = historical_data.append(merged_result)
+        # append the merged result of the season to the historical stats data
+        historical_stats_data = historical_stats_data.append(merged_result)
 
-    historical_data.to_csv("stats_data.csv")
+    for season in seasons:
+        print("Getting allstars for {} - {}".format(season-1, season))
+        all_star_roster = get_allstars(season)
+        historical_all_star_data = historical_all_star_data.append(all_star_roster)
+
+    historical_all_star_data.to_csv("all_stars.csv")
+
+    for i, player in historical_stats_data.iterrows():
+        for j, all_star in historical_all_star_data.iterrows():
+            if player["Player"] == all_star["Player"] and player["Season"] == all_star["Season"]:
+                print(player["Player"] + " set")
+                historical_stats_data.at[i, "All-Star"] = 1
+
+    historical_stats_data.to_csv("stats_data.csv")
 
     return 0
 

@@ -46,7 +46,7 @@ def get_advanced_stats(season: int) -> object:
 def get_allstars(season: int) -> object:
     # the all star game was cancelled in 1999 due to NBA lockout
     if season == 1999:
-        return
+        return panda.DataFrame()
 
     request_url = ALLSTAR_ROSTER_BASE_URL.format(season)
     request = requests.get(request_url)
@@ -75,7 +75,7 @@ def get_allstars(season: int) -> object:
 
 
 def main():
-    seasons = numpy.arange(2005, 2007, 1)
+    seasons = numpy.arange(1977, 2019, 1)
 
     historical_stats_data = panda.DataFrame()
     historical_all_star_data = panda.DataFrame()
@@ -91,20 +91,17 @@ def main():
         merged_result["All-Star"] = 0
 
         # append the merged result of the season to the historical stats data
-        historical_stats_data = historical_stats_data.append(merged_result)
+        historical_stats_data = historical_stats_data.append(merged_result).reset_index(drop=True)
 
     for season in seasons:
         print("Getting allstars for {} - {}".format(season-1, season))
         all_star_roster = get_allstars(season)
-        historical_all_star_data = historical_all_star_data.append(all_star_roster)
+        historical_all_star_data = historical_all_star_data.append(all_star_roster).reset_index(drop=True)
 
-    historical_all_star_data.to_csv("all_stars.csv")
-
-    for i, player in historical_stats_data.iterrows():
-        for j, all_star in historical_all_star_data.iterrows():
-            if player["Player"] == all_star["Player"] and player["Season"] == all_star["Season"]:
-                print(player["Player"] + " set")
-                historical_stats_data.at[i, "All-Star"] = 1
+    for i, all_star in historical_all_star_data.iterrows():
+        for j, player in historical_stats_data.iterrows():
+            if all_star["Player"] in player["Player"] and player["Season"] == all_star["Season"]:
+                historical_stats_data.at[j, "All-Star"] = 1
 
     historical_stats_data.to_csv("stats_data.csv")
 

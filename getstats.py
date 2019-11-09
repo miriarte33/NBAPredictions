@@ -74,6 +74,10 @@ def get_allstars(season: int) -> object:
     return df1.append(df2, sort=True).reset_index(drop=True).rename(columns={"Starters": "Player"})
 
 
+def get_all_nba(season: int) -> object:
+    pass
+
+
 def main():
     seasons = numpy.arange(1977, 2019, 1)
 
@@ -93,8 +97,6 @@ def main():
         # append the merged result of the season to the historical stats data
         historical_stats_data = historical_stats_data.append(merged_result).reset_index(drop=True)
 
-    for season in seasons:
-        print("Getting allstars for {} - {}".format(season-1, season))
         all_star_roster = get_allstars(season)
         historical_all_star_data = historical_all_star_data.append(all_star_roster).reset_index(drop=True)
 

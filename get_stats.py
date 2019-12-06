@@ -2,12 +2,14 @@ import numpy as numpy
 import pandas as panda
 import requests
 from bs4 import BeautifulSoup
+import os.path
 
 
 PER_GAME_BASE_URL = "https://www.basketball-reference.com/leagues/NBA_{}_per_game.html"
 ADVANCED_BASE_URL = "https://www.basketball-reference.com/leagues/NBA_{}_advanced.html"
 ALLSTAR_ROSTER_BASE_URL = "https://www.basketball-reference.com/allstar/NBA_{}.html"
 MVP_BASE_URL = "https://www.basketball-reference.com/awards/awards_{}.html"
+
 
 def get_per_game_stats(season: int) -> object:
     request_url = PER_GAME_BASE_URL.format(season)
@@ -75,10 +77,6 @@ def get_allstars(season: int) -> object:
     return df1.append(df2, sort=True).reset_index(drop=True).rename(columns={"Starters": "Player"})
 
 
-def get_all_nba(season: int) -> object:
-    pass
-
-
 def get_mvp(season: int) -> object:
     request_url = MVP_BASE_URL.format(season)
     request = requests.get(request_url)
@@ -96,15 +94,14 @@ def get_mvp(season: int) -> object:
     return df
 
 
-def main():
-    seasons = numpy.arange(2011, 2018, 1)
+def create_csv():
+    seasons = numpy.arange(1977, 2018, 1)
 
     historical_stats_data = panda.DataFrame()
     historical_all_star_data = panda.DataFrame()
     historical_mvp_data = panda.DataFrame()
 
     for season in seasons:
-        print("Getting stats for {} - {}".format(season - 1, season))
         # get per game and advanced stats for the given season
         season_per_game_stats = get_per_game_stats(season)
         season_advanced_stats = get_advanced_stats(season)
@@ -135,8 +132,7 @@ def main():
 
     historical_stats_data.to_csv("stats_data.csv")
 
-    return 0
 
-
-if __name__ == '__main__':
-    main()
+def get_stats():
+    if not os.path.exists("stats_data.csv"):
+        create_csv()

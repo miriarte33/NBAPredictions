@@ -3,6 +3,7 @@ import pandas as panda
 import requests
 from bs4 import BeautifulSoup
 import os.path
+from progress.bar import Bar
 
 
 PER_GAME_BASE_URL = "https://www.basketball-reference.com/leagues/NBA_{}_per_game.html"
@@ -101,6 +102,7 @@ def create_csv():
     historical_all_star_data = panda.DataFrame()
     historical_mvp_data = panda.DataFrame()
 
+    bar = Bar("Getting Seasons", max=len(seasons))
     for season in seasons:
         # get per game and advanced stats for the given season
         season_per_game_stats = get_per_game_stats(season)
@@ -120,15 +122,27 @@ def create_csv():
         mvp = get_mvp(season)
         historical_mvp_data = historical_mvp_data.append(mvp)
 
+        bar.next()
+
+    bar.finish()
+
+    bar = Bar("Appending All Star data", max=len(historical_all_star_data.index))
     for i, all_star in historical_all_star_data.iterrows():
         for j, player in historical_stats_data.iterrows():
             if all_star["Player"] in player["Player"] and player["Season"] == all_star["Season"]:
                 historical_stats_data.at[j, "All-Star"] = 1
+        bar.next()
 
+    bar.finish()
+
+    bar = Bar("Appending MVP data", max=len(historical_mvp_data.index))
     for i, mvp in historical_mvp_data.iterrows():
         for j, player in historical_stats_data.iterrows():
             if mvp["Player"] in player["Player"] and player["Season"] == mvp["Season"]:
                 historical_stats_data.at[j, "MVP"] = 1
+        bar.next()
+
+    bar.finish()
 
     historical_stats_data.to_csv("stats_data.csv")
 

@@ -78,7 +78,7 @@ def get_allstars(season: int) -> object:
     return df1.append(df2, sort=True).reset_index(drop=True).rename(columns={"Starters": "Player"})
 
 
-def get_mvp(season: int) -> object:
+def get_mvp_voting(season: int) -> object:
     request_url = MVP_BASE_URL.format(season)
     request = requests.get(request_url)
     html_content = BeautifulSoup(request.content, "html.parser")
@@ -89,8 +89,7 @@ def get_mvp(season: int) -> object:
     df = panda.read_html(str(mvp_table))[0]
     df["Season"] = "{} - {}".format(season-1, season)
 
-    # first person on the list is the number 1 in MVP voting, what we care about
-    df = df.iloc[:1]
+    df = df.rename(columns={"First": "MVP-Votes"})
 
     return df
 
@@ -111,7 +110,7 @@ def create_csv():
         # merge the stats for the given season
         merged_result = panda.merge(season_per_game_stats, season_advanced_stats, on="Rk")
         merged_result["All-Star"] = 0
-        merged_result["MVP"] = 0
+        merged_result["MVP-Votes"] = 0
 
         # append the merged result of the season to the historical stats data
         historical_stats_data = historical_stats_data.append(merged_result).reset_index(drop=True)
@@ -119,7 +118,7 @@ def create_csv():
         all_star_roster = get_allstars(season)
         historical_all_star_data = historical_all_star_data.append(all_star_roster).reset_index(drop=True)
 
-        mvp = get_mvp(season)
+        mvp = get_mvp_voting(season)
         historical_mvp_data = historical_mvp_data.append(mvp)
 
         bar.next()
@@ -139,7 +138,7 @@ def create_csv():
     for i, mvp in historical_mvp_data.iterrows():
         for j, player in historical_stats_data.iterrows():
             if mvp["Player"] in player["Player"] and player["Season"] == mvp["Season"]:
-                historical_stats_data.at[j, "MVP"] = 1
+                historical_stats_data.at[j, "MVP-Votes"] = mvp["MVP-Votes"]
         bar.next()
 
     bar.finish()

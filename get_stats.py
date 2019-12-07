@@ -10,6 +10,13 @@ PER_GAME_BASE_URL = "https://www.basketball-reference.com/leagues/NBA_{}_per_gam
 ADVANCED_BASE_URL = "https://www.basketball-reference.com/leagues/NBA_{}_advanced.html"
 ALLSTAR_ROSTER_BASE_URL = "https://www.basketball-reference.com/allstar/NBA_{}.html"
 MVP_BASE_URL = "https://www.basketball-reference.com/awards/awards_{}.html"
+FEATURES = ["Rk", "Player", "Pos", "Age", "Tm", "G", "GS",
+            "MP", "FG", "FGA", "FG%", "3P", "3PA", "3P%", "2P", "2PA",
+            "2P%", "eFG%", "FT", "FTA", "FT%", "ORB", "DRB",
+            "TRB", "AST", "STL", "BLK", "TOV", "PF", "PTS", "Season",
+            "PER", "TS%", "3PAr", "FTr", "ORB%", "DRB%", "TRB%",
+            "AST%", "STL%", "BLK%", "TOV%", "USG%", "OWS", "DWS",
+            "WS", "WS/48", "OBPM", "DBPM", "BPM", "VORP", "All-Star", "MVP-Votes"]
 
 
 def get_per_game_stats(season: int) -> object:

@@ -1,28 +1,45 @@
 import get_stats
-import numpy
 import pandas
-from sklearn import tree, preprocessing, ensemble
+from sklearn import preprocessing, ensemble, metrics
 
 
 def main():
     get_stats.get_stats()
-    dataframe = pandas.read_csv("stats_data.csv")
+    training_data = pandas.read_csv("stats_data.csv")
+    training_data = training_data.drop(["Unnamed: 0"], axis="columns")
 
-    # pre-processing must encode values because cannot fit strings
+    # pre-processing must encode values because trees require categorical values to be encoded
     label_encoder = preprocessing.LabelEncoder()
-    for i in range(54):
-        dataframe.iloc[:, i] = label_encoder.fit_transform(dataframe.iloc[:, i])
+    for i in range(53):
+        training_data.iloc[:, i] = label_encoder.fit_transform(training_data.iloc[:, i])
 
-    forest = ensemble.ExtraTreesClassifier(n_estimators=250, random_state=0)
+    class_weight = dict({1: 1, 0: 16.5})
+    forest = ensemble.RandomForestClassifier(class_weight=class_weight)
 
+    # training
     # must drop the target variable
     # also dropping variables i dont want the forest to consider
-    x = dataframe.drop(["All-Star", "MVP-Votes", "Unnamed: 0", "Rk"], axis='columns')
-    y = dataframe["All-Star"]
-    forest.fit(x, y)
+    x_train = training_data.drop(["All-Star", "MVP-Votes", "Rk"], axis='columns')
+    y_train = training_data["All-Star"]
+    forest.fit(x_train, y_train)
 
-    feature_importances = pandas.DataFrame(forest.feature_importances_, index=x.columns, columns=['Feature Importance']).sort_values('Feature Importance', ascending=False)
+    feature_importances = pandas.DataFrame(forest.feature_importances_, index=x_train.columns, columns=['Feature Importance']).sort_values('Feature Importance', ascending=False)
     print(feature_importances)
+
+    # testing
+    # we are now going to predict the 2017 all stars and see how well our model performed
+    test_set = get_stats.create_test_set(2017)
+    test_set.to_csv("data_2017.csv")
+
+    for i in range(53):
+        test_set.iloc[:, i] = label_encoder.fit_transform(test_set.iloc[:, i])
+
+    x_test = test_set.drop(["All-Star", "MVP-Votes", "Rk"], axis='columns')
+    y_test = test_set["All-Star"]
+
+    y_predicted = forest.predict(x_test)
+
+    print("Prediction score: {}".format(forest.score(x_test, y_test)))
 
 
 if __name__ == '__main__':

@@ -101,8 +101,43 @@ def get_mvp_voting(season: int) -> object:
     return df
 
 
+def create_test_set(season: int):
+    stats_data = panda.DataFrame()
+    all_star_data = panda.DataFrame()
+    mvp_data = panda.DataFrame()
+
+    per_game_stats = get_per_game_stats(season)
+    advanced_stats = get_advanced_stats(season)
+
+    # merge the stats for the given season
+    merged_result = panda.merge(per_game_stats, advanced_stats, on="Rk")
+    merged_result["All-Star"] = 0
+    merged_result["MVP-Votes"] = 0
+
+    # append the merged result of the season to the historical stats data
+    stats_data = stats_data.append(merged_result).reset_index(drop=True)
+
+    all_star_roster = get_allstars(season)
+    all_star_data = all_star_data.append(all_star_roster).reset_index(drop=True)
+
+    mvp = get_mvp_voting(season)
+    mvp_data = mvp_data.append(mvp)
+
+    for i, all_star in all_star_data.iterrows():
+        for j, player in stats_data.iterrows():
+            if all_star["Player"] in player["Player"] and player["Season"] == all_star["Season"]:
+                stats_data.at[j, "All-Star"] = 1
+
+    for i, mvp in mvp_data.iterrows():
+        for j, player in stats_data.iterrows():
+            if mvp["Player"] in player["Player"] and player["Season"] == mvp["Season"]:
+                stats_data.at[j, "MVP-Votes"] = mvp["MVP-Votes"]
+
+    return stats_data
+
+
 def create_csv():
-    seasons = numpy.arange(1977, 2018, 1)
+    seasons = numpy.arange(1977, 2017, 1)
 
     historical_stats_data = panda.DataFrame()
     historical_all_star_data = panda.DataFrame()

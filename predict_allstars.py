@@ -46,9 +46,13 @@ def main():
             print("{}. {}".format(count, player["Player"]))
             count += 1
 
-    print("\nAccuracy: {}".format(metrics.accuracy_score(y_test, y_predicted)))
     print("\nConfusion Matrix:")
     print(metrics.confusion_matrix(y_test, y_predicted))
+
+    print("\nAccuracy: {}".format(metrics.accuracy_score(y_test, y_predicted)))
+    print("\nPrecision: {}".format(metrics.precision_score(y_test, y_predicted)))
+    print("\nRecall: {}".format(metrics.recall_score(y_test, y_predicted)))
+    print("\nF Measure: {}".format(metrics.f1_score(y_test, y_predicted)))
 
 
 if __name__ == '__main__':

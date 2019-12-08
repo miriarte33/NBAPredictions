@@ -9,11 +9,12 @@ def main():
     training_data = training_data.drop(["Unnamed: 0"], axis="columns")
 
     # pre-processing must encode values because trees require categorical values to be encoded
+    # adding weight to the negative class to solve the class imbalance issue
     label_encoder = preprocessing.LabelEncoder()
     for i in range(53):
         training_data.iloc[:, i] = label_encoder.fit_transform(training_data.iloc[:, i])
 
-    class_weight = dict({1: 1, 0: 16.5})
+    class_weight = dict({1: 1, 0: 35})
     forest = ensemble.RandomForestClassifier(class_weight=class_weight)
 
     # training
@@ -29,17 +30,25 @@ def main():
     # testing
     # we are now going to predict the 2017 all stars and see how well our model performed
     test_set = get_stats.create_test_set(2017)
-    test_set.to_csv("data_2017.csv")
+    encoded_test_set = test_set.copy()
+    for i in range(forest.n_features_):
+        encoded_test_set.iloc[:, i] = label_encoder.fit_transform(encoded_test_set.iloc[:, i])
 
-    for i in range(53):
-        test_set.iloc[:, i] = label_encoder.fit_transform(test_set.iloc[:, i])
-
-    x_test = test_set.drop(["All-Star", "MVP-Votes", "Rk"], axis='columns')
-    y_test = test_set["All-Star"]
+    x_test = encoded_test_set.drop(["All-Star", "MVP-Votes", "Rk"], axis='columns')
+    y_test = encoded_test_set["All-Star"]
 
     y_predicted = forest.predict(x_test)
 
-    print("Prediction score: {}".format(forest.score(x_test, y_test)))
+    print("\nPredicted All Stars: ")
+    count = 1
+    for i, player in test_set.iterrows():
+        if y_predicted[i] == 1:
+            print("{}. {}".format(count, player["Player"]))
+            count += 1
+
+    print("\nAccuracy: {}".format(metrics.accuracy_score(y_test, y_predicted)))
+    print("\nConfusion Matrix:")
+    print(metrics.confusion_matrix(y_test, y_predicted))
 
 
 if __name__ == '__main__':

@@ -14,7 +14,7 @@ def main():
     for i in range(53):
         training_data.iloc[:, i] = label_encoder.fit_transform(training_data.iloc[:, i])
 
-    class_weight = dict({1: 1, 0: 35})
+    class_weight = dict({1: 1, 0: 16.5})
     forest = ensemble.RandomForestClassifier(class_weight=class_weight)
 
     # training
@@ -37,7 +37,9 @@ def main():
     x_test = encoded_test_set.drop(["All-Star", "MVP-Votes", "Rk"], axis='columns')
     y_test = encoded_test_set["All-Star"]
 
-    y_predicted = forest.predict(x_test)
+    # increasing the classification threshold to try to force our model to picking closer to 24 all stars, the real life amount
+    y_predicted_probabilities = forest.predict_proba(x_test)[:, 1]
+    y_predicted = preprocessing.binarize(y_predicted_probabilities.reshape(-1, 1), 0.45)
 
     print("\nPredicted All Stars: ")
     count = 1

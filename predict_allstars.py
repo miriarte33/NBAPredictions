@@ -58,6 +58,7 @@ def main():
     print("\nPrecision: {}".format(metrics.precision_score(y_test, y_predicted)))
     print("\nRecall: {}".format(metrics.recall_score(y_test, y_predicted)))
     print("\nF Measure: {}".format(metrics.f1_score(y_test, y_predicted)))
+    print ("\nAUC: {}".format(metrics.roc_auc_score(y_test, y_predicted_probabilities)))
 
     false_positive_rate, true_positive_rate, thresholds = metrics.roc_curve(y_test, y_predicted_probabilities)
 

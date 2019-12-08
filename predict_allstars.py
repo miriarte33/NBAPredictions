@@ -1,6 +1,8 @@
 import get_stats
 import pandas
+import numpy
 from sklearn import preprocessing, ensemble, metrics
+import matplotlib.pyplot as plot
 
 
 def main():
@@ -39,7 +41,8 @@ def main():
 
     # increasing the classification threshold to try to force our model to picking closer to 24 all stars, the real life amount
     y_predicted_probabilities = forest.predict_proba(x_test)[:, 1]
-    y_predicted = preprocessing.binarize(y_predicted_probabilities.reshape(-1, 1), 0.45)
+    # need to reshape the data to a 2D array. -1, 1 means there is only one feature
+    y_predicted = preprocessing.binarize(y_predicted_probabilities.reshape(-1, 1), 0.43)
 
     print("\nPredicted All Stars: ")
     count = 1
@@ -55,6 +58,20 @@ def main():
     print("\nPrecision: {}".format(metrics.precision_score(y_test, y_predicted)))
     print("\nRecall: {}".format(metrics.recall_score(y_test, y_predicted)))
     print("\nF Measure: {}".format(metrics.f1_score(y_test, y_predicted)))
+
+    false_positive_rate, true_positive_rate, thresholds = metrics.roc_curve(y_test, y_predicted_probabilities)
+
+    plot.plot(false_positive_rate, true_positive_rate)
+    plot.xlim([0.0, 1.0])
+    plot.ylim([0.0, 1.0])
+    for x, y, txt in zip(false_positive_rate[::5], true_positive_rate[::5], thresholds[::5]):
+        plot.annotate(numpy.round(txt, 2), (x, y - 0.04))
+    plot.rcParams['font.size'] = 8
+    plot.title('ROC curve for All Star classifier')
+    plot.xlabel('False Positive Rate')
+    plot.ylabel('True Positive Rate')
+    plot.grid(True)
+    plot.show()
 
 
 if __name__ == '__main__':

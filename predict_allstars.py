@@ -22,7 +22,7 @@ def main():
     # training
     # must drop the target variable
     # also dropping variables i dont want the forest to consider
-    x_train = training_data.drop(["All-Star", "MVP-Votes", "Rk"], axis='columns')
+    x_train = training_data.drop(["All-Star", "Share", "Rk"], axis='columns')
     y_train = training_data["All-Star"]
     forest.fit(x_train, y_train)
 
@@ -36,7 +36,7 @@ def main():
     for i in range(forest.n_features_):
         encoded_test_set.iloc[:, i] = label_encoder.fit_transform(encoded_test_set.iloc[:, i])
 
-    x_test = encoded_test_set.drop(["All-Star", "MVP-Votes", "Rk"], axis='columns')
+    x_test = encoded_test_set.drop(["All-Star", "Share", "Rk"], axis='columns')
     y_test = encoded_test_set["All-Star"]
 
     # increasing the classification threshold to try to force our model to picking closer to 24 all stars, the real life amount

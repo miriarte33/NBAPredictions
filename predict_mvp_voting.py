@@ -1,52 +1,55 @@
 import get_stats
 import pandas
+from sklearn import preprocessing, ensemble, linear_model
 import numpy
-from sklearn import preprocessing, ensemble, metrics, linear_model
-import matplotlib.pyplot as plot
 
 
 def main():
     get_stats.get_stats()
     training_data = pandas.read_csv("stats_data.csv")
-    training_data = training_data.drop(["Unnamed: 0"], axis="columns")
+    training_data = training_data.drop(["Unnamed: 0", "FGA", "2PA", "3PA", "3PAr", "FTA", "ORB", "DRB", "OWS", "DWS"], axis="columns")
+    training_data["3P"].fillna(0)
+    training_data["3P%"].fillna(0)
+    mean_tov = training_data["TOV"].mean
+    training_data["TOV"].fillna(mean_tov)
+    mean_tov_percentage = training_data["TOV%"].mean
+    training_data["TOV%"].fillna(mean_tov_percentage)
+    mean_usg = training_data["USG%"].mean
+    training_data["USG%"].fillna(mean_usg)
+    mean_gs = training_data["GS"].mean
+    training_data["GS"].fillna(mean_gs)
 
-    # pre-processing must encode values because trees require categorical values to be encoded
-    # adding weight to the negative class to solve the class imbalance issue
     label_encoder = preprocessing.LabelEncoder()
-    for i in range(53):
+    for i in range(42):
         training_data.iloc[:, i] = label_encoder.fit_transform(training_data.iloc[:, i])
 
-    forest = ensemble.RandomForestRegressor(n_estimators=100)
-
-    # training
-    # must drop the target variable
-    # also dropping variables i dont want the forest to consider
-    x_train = training_data.drop(["Share", "Rk"], axis='columns')
+    X_train = training_data.drop("Share", axis="columns")
     y_train = training_data["Share"]
 
-    forest.fit(x_train, y_train)
+    # pre-processing
+    cor = training_data.corr()
+    cor_target = abs(cor["Share"])
+    relevant_features = cor_target[cor_target > 0.1]
+    print(relevant_features)
 
-    feature_importances = pandas.DataFrame(forest.feature_importances_, index=x_train.columns, columns=['Feature Importance']).sort_values('Feature Importance', ascending=False)
-    print(feature_importances)
+    linear_regressor = linear_model.LinearRegression()
 
-    # testing
-    # we are now going to predict the 2017 all stars and see how well our model performed
-    test_set = get_stats.create_test_set(2017)
+    linear_regressor.fit(X_train, y_train)
+    print(linear_regressor.coef_)
+
+    test_set = get_stats.create_test_set(2017).drop(["FGA", "2PA", "3PA", "3PAr", "FTA", "ORB", "DRB", "OWS", "DWS"], axis="columns")
     encoded_test_set = test_set.copy()
-    for i in range(forest.n_features_):
+    for i in range(42):
         encoded_test_set.iloc[:, i] = label_encoder.fit_transform(encoded_test_set.iloc[:, i])
 
-    x_test = encoded_test_set.drop(["Share", "Rk"], axis='columns')
+    X_test = encoded_test_set.drop(["Share"], axis='columns')
+    y_test = encoded_test_set["Share"]
 
-    y_predicted = forest.predict(x_test)
+    y_predicted = linear_regressor.predict(X_test)
 
-    print("\nPredicted MVP Votes: ")
-    count = 1
-    for i, player in test_set.iterrows():
-        if y_predicted[i] > 0:
-            print("{}. {} Votes: {}".format(count, player["Player"], y_predicted[i]))
-            count += 1
-
+    test_results = pandas.DataFrame(test_set["Player"])
+    test_results["Share"] = y_predicted
+    print(test_results.sort_values("Share", ascending=False)[0:10])
 
 if __name__ == '__main__':
     main()

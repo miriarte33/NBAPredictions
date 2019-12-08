@@ -135,7 +135,7 @@ def create_test_set(season: int):
 
 
 def create_csv():
-    seasons = numpy.arange(2013, 2017, 1)
+    seasons = numpy.arange(1977, 2017, 1)
 
     historical_stats_data = panda.DataFrame()
     historical_all_star_data = panda.DataFrame()

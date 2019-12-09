@@ -4,16 +4,19 @@ from sklearn import preprocessing, ensemble, metrics, linear_model,tree, svm
 import numpy
 
 
-def main():
-    FEATURES = ["PTS", "TRB", "AST", "All-Star", "FGA", "WS", "FG%"]
+def run_regression(features = None):
     get_stats.get_stats()
 
     training_data = pandas.read_csv("stats_data.csv")
-    training_data.fillna(20.0, inplace=True)
-    training_data_copy = training_data[FEATURES]
+
+    training_data.fillna(0, inplace=True)
+    if features is None:    
+        features = training_data.copy().drop(["Share", "Unnamed: 0"], axis="columns").columns
+
+    training_data_copy = training_data[features]
 
     label_encoder = preprocessing.LabelEncoder()
-    for i in range(len(FEATURES)):
+    for i in range(len(features)):
         training_data_copy.iloc[:, i] = label_encoder.fit_transform(training_data_copy.iloc[:, i])
 
     X_train = training_data_copy
@@ -24,9 +27,9 @@ def main():
     decision_tree.fit(X_train, y_train)
 
     test_set = get_stats.create_test_set(2017)
-    test_set_copy = test_set[FEATURES]
+    test_set_copy = test_set[features]
     encoded_test_set = test_set_copy
-    for i in range(len(FEATURES)):
+    for i in range(len(features)):
         encoded_test_set.iloc[:, i] = label_encoder.fit_transform(encoded_test_set.iloc[:, i])
 
     X_test = encoded_test_set
@@ -47,9 +50,9 @@ def main():
     forest.fit(X_train, y_train)
 
     test_set = get_stats.create_test_set(2017)
-    test_set_copy = test_set[FEATURES]
+    test_set_copy = test_set[features]
     encoded_test_set = test_set_copy
-    for i in range(len(FEATURES)):
+    for i in range(len(features)):
         encoded_test_set.iloc[:, i] = label_encoder.fit_transform(encoded_test_set.iloc[:, i])
 
     X_test = encoded_test_set
@@ -70,9 +73,9 @@ def main():
     linear.fit(X_train, y_train)
 
     test_set = get_stats.create_test_set(2017)
-    test_set_copy = test_set[FEATURES]
+    test_set_copy = test_set[features]
     encoded_test_set = test_set_copy
-    for i in range(len(FEATURES)):
+    for i in range(len(features)):
         encoded_test_set.iloc[:, i] = label_encoder.fit_transform(encoded_test_set.iloc[:, i])
 
     X_test = encoded_test_set
@@ -87,6 +90,15 @@ def main():
     print("Mean Absolute Error: {}".format(metrics.mean_absolute_error(y_test, y_predicted)))
     print("Mean Squared Error: {}".format(metrics.mean_squared_error(y_test, y_predicted)))
     print("R2 Score: {}".format(metrics.r2_score(y_test, y_predicted)))
+
+
+def main():
+    features = ["PTS", "TRB", "AST", "All-Star", "FGA", "WS", "FG%"]
+    print("\nRegression With All Features: ")
+    run_regression()
+
+    print("\nRegression with Subset of Features {}".format(features))
+    run_regression(features)
 
 
 if __name__ == '__main__':

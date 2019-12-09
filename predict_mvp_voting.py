@@ -45,7 +45,7 @@ def run_regression(features = None):
     print("Mean Squared Error: {}".format(metrics.mean_squared_error(y_test, y_predicted)))
     print("R2 Score: {}".format(metrics.r2_score(y_test, y_predicted)))
 
-    forest = ensemble.RandomForestRegressor()
+    forest = ensemble.RandomForestRegressor(random_state=3)
 
     forest.fit(X_train, y_train)
 

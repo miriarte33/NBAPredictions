@@ -17,7 +17,7 @@ def main():
         training_data.iloc[:, i] = label_encoder.fit_transform(training_data.iloc[:, i])
 
     class_weight = dict({1: 1, 0: 16.5})
-    forest = ensemble.RandomForestClassifier(class_weight=class_weight, random_state=2)
+    forest = ensemble.RandomForestClassifier(class_weight=class_weight, random_state=50)
 
     # training
     # must drop the target variable

@@ -42,7 +42,7 @@ def main():
     # increasing the classification threshold to try to force our model to picking closer to 24 all stars, the real life amount
     y_predicted_probabilities = forest.predict_proba(x_test)[:, 1]
     # need to reshape the data to a 2D array. -1, 1 means there is only one feature
-    y_predicted = preprocessing.binarize(y_predicted_probabilities.reshape(-1, 1), 0.45)
+    y_predicted = preprocessing.binarize(y_predicted_probabilities.reshape(-1, 1), 0.43)
 
     print("\nPredicted All Stars: ")
     count = 1

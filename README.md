@@ -3,12 +3,6 @@ Regression Performance on NBA Statistics**
 
 Manrique Iriarte
 
-Professor Weiss
-
-December 13, 2019
-
-miriarte\@fordham.edu
-
 *Abstract*--- NBA All-Star rosters and MVP voting has always been a
 subject of debate amongst basketball fans and professional sports
 analysts. Who deserved that final All-Star roster spot? Who should have
